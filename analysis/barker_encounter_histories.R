@@ -11,6 +11,8 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(viridis)
 library(fuzzyjoin)
+library(ggspatial)
+library(patchwork)
 
 # load data
 all_data <- read_excel("./data/all_projects_resights.xlsx", sheet = "REKNresights")
@@ -18,6 +20,17 @@ jb_data <- read_excel("./data/jb_project_resights.xlsx", sheet = "Sheet1")
 cc_data <- read_excel("./data/cc_project_resights.xlsx", sheet = "CapeCod_REKNresights_JEL")
 br_data <- read_excel("./data/br_project_resights.xlsx", sheet = "proj87REKNresights")
 pb_data <- read_excel("./data/bandedbirds_publicresights.xlsx", sheet = "qry_Res_proj1REKNresights")
+fl_data1 <- read_excel("./data/fl_banding_resights.xlsx", sheet = "proj17ResightData")
+fl_data2 <- read_excel("./data/fl_banding_resights.xlsx", sheet = "proj33ResightData") %>% 
+  select(-`...18`)
+
+fl_data <- bind_rows(fl_data1, fl_data2) %>% 
+  mutate(Name = LocationID) %>% 
+  rename(dbo_ResightingMasters.Comments = ResightingMasters.Comments) %>% 
+  rename(dbo_Resightings.Comments = Resightings.Comments) %>% 
+  select(ProjectID, ResightDate, LocationID, Name, Latitude, Longitude, dbo_ResightingMasters.Comments,
+         SpeciesID, BirdID, MetalID, FlagID, FlagCode, dbo_Resightings.Comments, ResightCertainty)
+rm(fl_data1, fl_data2)
 
 pb_data <- pb_data %>% 
   mutate(Name = NA) %>% 
@@ -28,6 +41,7 @@ pb_data <- pb_data %>%
 all_resights <- bind_rows(all_data, jb_data)
 all_resights <- bind_rows(all_resights, br_data)
 all_resights <- bind_rows(all_resights, pb_data)
+all_resights <- bind_rows(all_resights, fl_data)
 
 # remove uncertain resights
 all_resights_clean <- all_resights %>% 
@@ -51,7 +65,9 @@ all_resights_clean <- all_resights %>%
   mutate(ResightCertainty = str_replace(ResightCertainty, "^C$", "100")) %>%
   mutate(ResightCertainty = str_replace(ResightCertainty, "^\\?$", "50")) %>%
   mutate(ResightCertainty = str_replace(ResightCertainty, "^N$", "50")) %>%
-  mutate(ResightCertainty = str_replace(ResightCertainty, "^L$", "50"))
+  mutate(ResightCertainty = str_replace(ResightCertainty, "^L$", "50")) %>% 
+  mutate(ResightCertainty = str_replace(ResightCertainty, "^U$", "50")) %>%
+  mutate(ResightCertainty = str_replace(ResightCertainty, "^NOT SURE$", "50"))
 
 all_resights_clean$ResightCertainty <- as.numeric(all_resights_clean$ResightCertainty)  
 
@@ -79,9 +95,11 @@ all_resights_clean <- all_resights_clean %>%
 
 # load banding records
 banding_records <- read_excel("./data/banding_records.xlsx", sheet = "REKNcaptures")
+fl_banding_records <- read_excel("./data/fl_banding_resights.xlsx", sheet = "proj16BandingData")
 
 band_numbers <- banding_records %>% 
   select(MetalID) %>% 
+  bind_rows(., fl_banding_records %>% select(MetalID)) %>% 
   distinct() %>% pull()
 
 # separate out cleaned james bay resights
@@ -131,6 +149,9 @@ barker_resights <- barker_resights %>%
 location_resights <- barker_resights %>% 
   select(ProjectID, ResightDate, BirdID, Latitude, Longitude)
 
+# export dataframe so can make study site map
+saveRDS(location_resights, "./processed-data/location-resights.rds")
+
 # leaflet interactive map
 pal_fun <- colorFactor(viridis(17), unique(barker_resights$ProjectID))
 
@@ -161,6 +182,13 @@ cc_resights <- cc_data %>%
 barker_resights <- barker_resights %>% 
   select(ProjectID, ResightDate, BirdID) %>% 
   bind_rows(., cc_resights)
+
+# summarize resights by project
+project_resights <- barker_resights %>% 
+  group_by(ProjectID) %>% 
+  summarize(n = n())
+
+writexl::write_xlsx(project_resights, path = "./processed-data/resights-by-project-updated.xlsx")
 
 barker_resights_state <- barker_resights %>% 
   mutate(ProjectID = ifelse(ProjectID == 22, 2, 3)) %>% 
@@ -203,6 +231,18 @@ barker_resights_eh <- barker_resights_state %>%
   select(Period, BirdID, ObsState) %>% 
   distinct()
 
+# calculate number of obs in jb
+length(unique(barker_resights_eh$BirdID))
+
+jb_obs <- barker_resights_eh %>% 
+  filter(ObsState == 2) %>% 
+  distinct()
+
+# number of obs outside jb
+out_obs <- barker_resights_eh %>% 
+  filter(ObsState == 3) %>% 
+  distinct()
+
 # pull out birds detected in >1 state in a period
 check <- barker_resights_eh %>%
   group_by(Period, BirdID) %>%
@@ -237,6 +277,17 @@ barker_enchist <- barker_enchist %>%
   bind_cols(enchist_ids, .) %>% 
   filter(!first == 11) %>% 
   select(-first)
+
+# update obs in and out of jb
+enchist_ids <- barker_enchist %>% 
+  select(BirdID) %>% 
+  pull()
+
+jb_obs <- jb_obs %>% 
+  filter(BirdID %in% enchist_ids)
+
+out_obs <- out_obs %>% 
+  filter((BirdID %in% enchist_ids))
 
 # export encounter histories
 write.csv(barker_enchist, file = "./processed-data/barker-enchist.csv", row.names = FALSE)
@@ -334,24 +385,78 @@ db_birds_total <- barker_enchist %>%
   filter(BirdID %in% db_birds)
 
 # percent of birds in study seen in delaware bay at some point during study
-(1344/2214)*100
+(1361/2276)*100
+
+# map jb resights
+windowsFonts(Times=windowsFont("TT Times New Roman"))
+
+location_jb_resights <- location_resights %>% 
+  filter(ProjectID == 22)
+
+jb_map <- ne_states(country = "Canada", returnclass = "sf") %>% 
+  filter(name %in% c("Ontario", "Québec", "Nunavut"))
+
+xmin_jb <- min(location_jb_resights$Longitude) - 2
+xmax_jb <- max(location_jb_resights$Longitude) + 2
+ymin_jb <- min(location_jb_resights$Latitude) - 1.5
+ymax_jb <- max(location_jb_resights$Latitude) + 2
+
+annotation <- data.frame(
+  x = c(-80, -81.5),
+  y = c(52.5, 53.05),
+  label = c("James Bay", "Akimiski\n  Island"))
+
+jb_resights_map <- ggplot(data = jb_map) +
+  geom_sf(colour = NA) +
+  geom_sf(data = lakes, fill = "white", colour = NA) +
+  geom_point(data = location_jb_resights,
+             aes(x = Longitude, y = Latitude),
+             colour = "black", alpha = 0.3, size = 1, shape = 17) +
+  geom_text(data=annotation, aes(x=x, y=y, label=label), family = "Times", size = 2) +
+  annotation_scale(location = "bl", line_width = 0.25,
+                   text_cex = 0.5, height = unit(0.15, "cm")) +
+  annotation_north_arrow(location = "bl", which_north = "true",
+                         pad_x = unit(0.5, "cm"), pad_y = unit(0.5, "cm"),
+                         style = north_arrow_fancy_orienteering,
+                         height = unit(0.75, "cm"), width = unit(0.75, "cm")) +
+  coord_sf(xlim = c(xmin_jb, xmax_jb), ylim = c(ymin_jb, ymax_jb), expand = FALSE) +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid.major = element_line(colour = "transparent"))
 
 # map all included resights
-xmin <- min(location_resights$Longitude) - 5
+xmin <- min(location_resights$Longitude) - 15
 xmax <- max(location_resights$Longitude) + 5
 ymin <- min(location_resights$Latitude) - 5
-ymax <- max(location_resights$Latitude) + 5
+ymax <- max(location_resights$Latitude) + 20
 
-png(filename = "./figures/resights-map.png", height = 6, width = 6,
-    units = "in", res = 600)
-
-print(resights_map <- ggplot(data = world) +
+resights_map <- ggplot(data = world) +
   geom_sf(colour = NA) +
   geom_sf(data = lakes, fill = "white", colour = NA) +
   geom_point(data = location_resights,
-             aes(x = Longitude, y = Latitude, colour = as.logical(ProjectID == 22)),
-             alpha = 0.5) +
-  coord_sf(xlim = c(xmin, xmax), ylim = c(ymin, ymax), expand = FALSE))
+             aes(x = Longitude, y = Latitude, shape = as.logical(ProjectID == 22)),
+             colour = "black", alpha = 0.3, size = 1) +
+  geom_rect(aes(xmin = xmin_jb, xmax = xmax_jb, ymin = ymin_jb, ymax = ymax_jb),
+            fill = NA, colour = "black", size = 0.5) +
+  annotation_scale(location = "bl", line_width = 0.25,
+                   text_cex = 0.5, height = unit(0.15, "cm")) +
+  annotation_north_arrow(location = "bl", which_north = "true",
+                         pad_x = unit(0.5, "cm"), pad_y = unit(0.5, "cm"),
+                         style = north_arrow_fancy_orienteering,
+                         height = unit(0.75, "cm"), width = unit(0.75, "cm")) +
+  coord_sf(xlim = c(xmin, xmax), ylim = c(ymin, ymax), expand = FALSE) +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid.major = element_line(colour = "transparent"),
+        legend.position = "none")
+
+png(filename = "./figures/study-sites-map.png", height = 4, width = 6,
+    units = "in", res = 600)
+
+print(resights_map + jb_resights_map +
+        plot_annotation(tag_levels = 'a'))
 
 dev.off()
 
@@ -363,3 +468,117 @@ bird_ids <- barker_enchist %>%
   distinct() %>% arrange(BirdID)
 
 write.csv(bird_ids, file = "./processed-data/macdonald-birdid-list.csv", row.names = FALSE)
+
+################################################################################
+
+# summarize number of observations per year by flag colour
+
+# filter out all birds never resighted in james bay and any resights before first sighting in james bay
+barker_resights <- all_resights_clean %>% 
+  filter(BirdID %in% jb_ids)
+
+barker_resights <- left_join(barker_resights, jb_first, by = "BirdID")
+
+barker_resights <- barker_resights %>% 
+  filter(!ResightDate < FirstResight) %>% 
+  filter(!ResightDate > "2019-09-03") %>% 
+  mutate(ProjectID = case_when(ProjectID == 1 & LocationID == "LONGRIDGEPT" ~ 22,
+                               ProjectID == 1 & LocationID == "LONGRIDGERVR" ~ 22,
+                               TRUE ~ ProjectID))
+
+cc_resights <- cc_data %>% 
+  select(ProjectID, ResightDate, FlagID, BirdID) %>% 
+  filter(BirdID %in% jb_ids) %>% 
+  left_join(., jb_first, by = "BirdID") %>% 
+  filter(!ResightDate < FirstResight) %>% 
+  select(-FirstResight)
+
+barker_resights <- barker_resights %>% 
+  select(ProjectID, ResightDate, FlagID, BirdID) %>% 
+  bind_rows(., cc_resights)
+
+barker_resights_state <- barker_resights %>% 
+  mutate(ProjectID = ifelse(ProjectID == 22, "JB", "Out")) %>% 
+  rename(ObsState = ProjectID)
+
+# set and assign periods
+set_periods <- tibble(Period = c(1:11),
+                      Start = c("2009-07-01",
+                                "2009-09-04",
+                                "2010-09-04",
+                                "2011-09-04",
+                                "2012-09-04",
+                                "2013-09-04",
+                                "2014-09-04",
+                                "2015-09-04",
+                                "2016-09-04",
+                                "2017-09-04",
+                                "2018-09-04"),
+                      End = c("2009-09-03",
+                              "2010-09-03",
+                              "2011-09-03",
+                              "2012-09-03",
+                              "2013-09-03",
+                              "2014-09-03",
+                              "2015-09-03",
+                              "2016-09-03",
+                              "2017-09-03",
+                              "2018-09-03",
+                              "2019-09-03"))
+
+set_periods$Start <- as_date(set_periods$Start)
+set_periods$End <- as_date(set_periods$End)
+
+barker_resights_state <- fuzzy_left_join(barker_resights_state, set_periods,
+                                         by = c("ResightDate" = "Start",
+                                                "ResightDate" = "End"),
+                                         match_fun = list(`>=`, `<=`))
+
+bb_resights <- barker_resights_state %>% 
+  select(Period, FlagID, BirdID, ObsState) %>% 
+  filter(BirdID %in% enchist_ids) %>% 
+  distinct()
+
+
+bb_resights <- bb_resights %>% 
+  mutate(FlagID = replace(FlagID, str_detect(FlagID, "FELG"), "FLG")) %>% 
+  mutate(FlagID = replace(FlagID, str_detect(FlagID, "FEDG"), "FDG")) %>% 
+  mutate(FlagID = replace(FlagID, str_detect(FlagID, "FEDB"), "FDB")) %>% 
+  mutate(FlagID = replace(FlagID, str_detect(FlagID, "FEO"), "FO")) %>% 
+  mutate(FlagID = replace(FlagID, str_detect(FlagID, "FEW"), "FW")) %>% 
+  mutate(FlagID = replace(FlagID, str_detect(FlagID, "FER"), "FR")) %>% 
+  distinct()
+
+# james bay
+jb_resights_summary <- bb_resights %>% 
+  filter(ObsState == "JB") %>% 
+  group_by(Period, FlagID) %>% 
+  tally()
+
+jb_year_summary <- jb_resights_summary %>% 
+  group_by(Period) %>% 
+  summarize(n = sum(n))
+
+jb_flag_summary <- jb_resights_summary %>% 
+  group_by(FlagID) %>% 
+  summarize(n = sum(n))
+
+jb_resights_summary_wide <- jb_resights_summary %>% 
+  pivot_wider(names_from = Period, values_from = n, values_fill = 0)
+
+# outside
+out_resights_summary <- bb_resights %>% 
+  filter(ObsState == "Out") %>% 
+  group_by(Period, FlagID) %>% 
+  tally()
+
+out_year_summary <- out_resights_summary %>% 
+  group_by(Period) %>% 
+  summarize(n = sum(n))
+
+out_flag_summary <- out_resights_summary %>% 
+  group_by(FlagID) %>% 
+  summarize(n = sum(n))
+
+out_resights_summary_wide <- out_resights_summary %>% 
+  pivot_wider(names_from = Period, values_from = n, values_fill = 0)
