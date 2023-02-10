@@ -246,7 +246,7 @@ system.time({
     
     # save results
     save(barker.mod,
-         file = "./analysis-output/covariate-models/pca/model_1.RData")
+         file = "./analysis-output/covariate-models/pca/model_2.RData")
     
 })
 
@@ -254,7 +254,7 @@ system.time({
 # plot results
 ################################################################################
 
-load("./analysis-output/covariate-models/pca/model_1.RData")
+load("./analysis-output/covariate-models/pca/model_2.RData")
 
 print(barker.mod)
 

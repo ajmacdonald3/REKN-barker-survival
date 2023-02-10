@@ -2132,6 +2132,20 @@ ao_cov <- ao %>%
             var_ao = var(AO)) %>% 
   mutate(Period = 1:10)
 
+############################ HORSESHOE CRAB EGGS ###############################
+
+hsc_egg <- read_csv("./data/hsc/dat_fit.csv")
+
+hsc_cov <- hsc_egg %>% 
+  filter(group %in% c(2010:2019)) %>% 
+  filter(x %in% c(130:151)) %>% 
+  group_by(group) %>% 
+  summarize(mean_hsc = mean(predicted),
+            var_hsc = var(predicted)) %>% 
+  mutate(Period = 1:10) %>%
+  rename(Year = group) %>% 
+  ungroup()
+
 ################################################################################
 
 # merge covariates
@@ -2140,6 +2154,7 @@ surv_covs <- left_join(arctic_snow_cov, sst_cov, by = c("Year", "Period"))
 surv_covs <- left_join(surv_covs, sst_anom_cov, by = c("Year", "Period"))
 surv_covs <- left_join(surv_covs, nao_cov, by = c("Year", "Period"))
 surv_covs <- left_join(surv_covs, ao_cov, by = c("Year", "Period"))
+surv_covs <- left_join(surv_covs, hsc_cov, by = c("Year", "Period"))
 
 saveRDS(surv_covs, file = "./processed-data/surv_covariates.rds")
 
@@ -2238,11 +2253,23 @@ ao_plot <- ggplot(surv_covs, aes(x=as.factor(Year), y=mean_ao, group=1)) +
   theme(axis.text.x  = element_text(angle = -45, vjust = 0.5),
         axis.title.x = element_blank())
 
+# hsc egg availability
+hsc_plot <- ggplot(surv_covs, aes(x=as.factor(Year), y=mean_hsc, group=1)) +
+  # geom_errorbar(data = surv_covs, aes(x=as.factor(Year), ymin=mean_hsc-var_hsc,
+  #                                     ymax=mean_hsc+var_hsc),
+  #               width=0, size=0.5, colour="black", linetype=1) +
+  geom_line(size=0.5) +
+  geom_point(shape = 21, size=2, fill = "black") +
+  ylab("Horseshoe crab egg density") +
+  theme_cust() +
+  theme(axis.text.x  = element_text(angle = -45, vjust = 0.5),
+        axis.title.x = element_blank())
+
 # plot all
 png(filename = paste0("figures/cov-plots-all.png"),
     width=6, height=6, units="in", res=600)
 
-plot_grid(snow_plot, sst_plot, sst_anom_plot, nao_plot, ao_plot, labels = "auto", ncol = 2)
+plot_grid(snow_plot, sst_plot, sst_anom_plot, nao_plot, ao_plot, hsc_plot, labels = "auto", ncol = 2)
 
 dev.off()
 
@@ -2265,7 +2292,7 @@ library(PerformanceAnalytics)
 surv_covs <- readRDS("./processed-data/surv_covariates.rds")
 
 surv_covs_pca <- surv_covs %>% 
-  dplyr::select(mean_snowc, mean_sst, mean_nao, mean_ao)
+  dplyr::select(mean_snowc, mean_sst, mean_nao, mean_ao, mean_hsc)
 
 # check correlations
 cor.mat <- round(cor(surv_covs_pca), 2)
@@ -2299,7 +2326,7 @@ library(PerformanceAnalytics)
 surv_covs <- readRDS("./processed-data/surv_covariates.rds")
 
 surv_covs_pca <- surv_covs %>% 
-  dplyr::select(mean_snowc, mean_sst, mean_nao, mean_ao)
+  dplyr::select(mean_snowc, mean_sst, mean_nao, mean_ao, mean_hsc)
 
 # check correlations
 cor.mat <- round(cor(surv_covs_pca), 2)
@@ -2356,3 +2383,25 @@ png(filename = paste0("figures/oscillation-plots.png"),
 print(osc_plot)
 
 dev.off()
+
+# plot hsc egg density
+
+hsc_plot <- ggplot(surv_covs, aes(x = as.factor(Year), y = mean_hsc, group = 1)) +
+  # geom_errorbar(data = surv_covs, aes(x=as.factor(Year), ymin=mean_ao-var_ao,
+  #                                     ymax=mean_ao+var_ao),
+  #               width=0, size=0.5, colour="black", linetype=1) +
+  geom_line(size=0.5) +
+  geom_point(shape = 21, size = 3, fill = "blue") +
+  #scale_y_continuous(breaks = seq(-2, 2, 0.5)) +
+  ylab(expression(paste("Predicted horseshoe crab eggs per ", m^2))) +
+  theme_cust() +
+  theme(axis.text.x  = element_text(angle = -45, vjust = 0.5),
+        axis.title.x = element_blank())
+
+png(filename = paste0("figures/hsc-plot.png"),
+    width=6, height=4, units="in", res=600)
+
+print(hsc_plot)
+
+dev.off()
+
