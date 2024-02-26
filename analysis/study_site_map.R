@@ -90,8 +90,8 @@ jb_resights_map <- ggplot(data = jb_map) +
   # geom_point(data = location_jb_rounded,
   #            aes(x = Longitude, y = Latitude, size = n),
   #            shape = 16, colour = "black", alpha = 0.5) +
-  geom_text(data=annotation, aes(x=x, y=y, label=label), size = 2) +
-  scale_colour_identity(guide = "legend", labels = c("study area")) +
+  geom_text(data=annotation, aes(x=x, y=y, label=label), size = 3) +
+  scale_colour_identity(guide = "legend", labels = c("Study area")) +
   annotation_scale(location = "br", line_width = 0.2,
                    text_cex = 0.5, height = unit(0.1, "cm")) +
   annotation_north_arrow(location = "br", which_north = "true",
@@ -107,7 +107,7 @@ jb_resights_map <- ggplot(data = jb_map) +
         panel.grid.major = element_line(colour = "transparent"),
         legend.position = "bottom", legend.box = "horizontal",
         legend.title = element_blank(),
-        legend.text = element_text(size = 6))
+        legend.text = element_text(size = 8))
 
 # # map all included resights
 # xmin <- min(location_resights$Longitude) - 15
@@ -265,23 +265,25 @@ resights_map_sf <- ggplot() +
                          style = north_arrow_orienteering(line_width = 0.5,
                                                           text_size = 3),
                          height = unit(0.3, "cm"), width = unit(0.3, "cm")) +
-  scale_size_continuous(name = "number of\nresights", range = c(0.25, 2)) +
+  scale_size_binned(name = "Number of\nresights", breaks = c(1, 100, 500, 1000, 10000, 19200),
+                    range = c(0.25, 3)) + # range = c(0.25, 2)
   coord_sf(xlim = c(xmin, xmax), ylim = c(ymin, ymax), expand = FALSE) +
   theme(axis.text = element_blank(),
         axis.title = element_blank(),
         axis.ticks = element_blank(),
         panel.grid.major = element_line(colour = "transparent"),
         legend.position = "bottom", legend.box = "horizontal",
-        legend.title = element_text(size = 6),
+        legend.title = element_text(size = 8),
         legend.text = element_text(size = 6))
 
 resights_map_sf
 
 # export plot
-png(filename = "./figures/study-sites-size-map-sf.png", height = 4, width = 6,
-    units = "in", res = 600)
+png(filename = "./figures/study-sites-size-map-sf-binned.png", height = 6, width = 7,
+    units = "in", res = 1200)
 
 print(jb_resights_map + resights_map_sf +
-        plot_annotation(tag_levels = 'a'))
+        plot_annotation(title = 'Figure 1',
+                        tag_levels = 'A'))
 
 dev.off()

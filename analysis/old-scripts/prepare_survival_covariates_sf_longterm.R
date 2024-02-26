@@ -14,6 +14,538 @@ library(cowplot)
 # load shapefile of preferred rufa REKN breeding habitat
 shp <- st_read("./data/Preferred_Habitat_and_Range_Intersect.shp")
 
+####---- 1995 ----####
+
+# load data in netCDF format
+
+nc_1995 <- nc_open("./data/snowc.1995.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_1995 <- brick("./data/snowc.1995.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_1995 <- subset(brick_1995, 166:181) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_1995))
+
+# keep only cells inside rufa range
+#brick_1995_rufa <- crop(brick_1995, extent(rufa_range))
+brick_1995_rufa <- raster::mask(brick_1995, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_1995_rufa <- calc(brick_1995_rufa, fun = mean, na.rm = TRUE)
+
+#mean_1995_rufa <- crop(x = mean_1995_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_1995 <- getValues(mean_1995_rufa)
+mean_snowc_1995 <- mean(vals_1995, na.rm=TRUE)
+var_snowc_1995 <- var(vals_1995, na.rm = TRUE)
+
+# plot
+mean_1995_rufa_df <- as.data.frame(mean_1995_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 1995)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_1995_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 1996 ----####
+
+# load data in netCDF format
+
+nc_1996 <- nc_open("./data/snowc.1996.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_1996 <- brick("./data/snowc.1996.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_1996 <- subset(brick_1996, 167:182) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_1996))
+
+# keep only cells inside rufa range
+#brick_1996_rufa <- crop(brick_1996, extent(rufa_range))
+brick_1996_rufa <- raster::mask(brick_1996, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_1996_rufa <- calc(brick_1996_rufa, fun = mean, na.rm = TRUE)
+
+#mean_1996_rufa <- crop(x = mean_1996_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_1996 <- getValues(mean_1996_rufa)
+mean_snowc_1996 <- mean(vals_1996, na.rm=TRUE)
+var_snowc_1996 <- var(vals_1996, na.rm = TRUE)
+
+# plot
+mean_1996_rufa_df <- as.data.frame(mean_1996_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 1996)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_1996_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 1997 ----####
+
+# load data in netCDF format
+
+nc_1997 <- nc_open("./data/snowc.1997.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_1997 <- brick("./data/snowc.1997.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_1997 <- subset(brick_1997, 166:181) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_1997))
+
+# keep only cells inside rufa range
+#brick_1997_rufa <- crop(brick_1997, extent(rufa_range))
+brick_1997_rufa <- raster::mask(brick_1997, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_1997_rufa <- calc(brick_1997_rufa, fun = mean, na.rm = TRUE)
+
+#mean_1997_rufa <- crop(x = mean_1997_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_1997 <- getValues(mean_1997_rufa)
+mean_snowc_1997 <- mean(vals_1997, na.rm=TRUE)
+var_snowc_1997 <- var(vals_1997, na.rm = TRUE)
+
+# plot
+mean_1997_rufa_df <- as.data.frame(mean_1997_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 1997)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_1997_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 1998 ----####
+
+# load data in netCDF format
+
+nc_1998 <- nc_open("./data/snowc.1998.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_1998 <- brick("./data/snowc.1998.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_1998 <- subset(brick_1998, 166:181) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_1998))
+
+# keep only cells inside rufa range
+#brick_1998_rufa <- crop(brick_1998, extent(rufa_range))
+brick_1998_rufa <- raster::mask(brick_1998, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_1998_rufa <- calc(brick_1998_rufa, fun = mean, na.rm = TRUE)
+
+#mean_1998_rufa <- crop(x = mean_1998_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_1998 <- getValues(mean_1998_rufa)
+mean_snowc_1998 <- mean(vals_1998, na.rm=TRUE)
+var_snowc_1998 <- var(vals_1998, na.rm = TRUE)
+
+# plot
+mean_1998_rufa_df <- as.data.frame(mean_1998_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 1998)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_1998_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 1999 ----####
+
+# load data in netCDF format
+
+nc_1999 <- nc_open("./data/snowc.1999.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_1999 <- brick("./data/snowc.1999.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_1999 <- subset(brick_1999, 166:181) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_1999))
+
+# keep only cells inside rufa range
+#brick_1999_rufa <- crop(brick_1999, extent(rufa_range))
+brick_1999_rufa <- raster::mask(brick_1999, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_1999_rufa <- calc(brick_1999_rufa, fun = mean, na.rm = TRUE)
+
+#mean_1999_rufa <- crop(x = mean_1999_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_1999 <- getValues(mean_1999_rufa)
+mean_snowc_1999 <- mean(vals_1999, na.rm=TRUE)
+var_snowc_1999 <- var(vals_1999, na.rm = TRUE)
+
+# plot
+mean_1999_rufa_df <- as.data.frame(mean_1999_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 1999)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_1999_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 2000 ----####
+
+# load data in netCDF format
+
+nc_2000 <- nc_open("./data/snowc.2000.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_2000 <- brick("./data/snowc.2000.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_2000 <- subset(brick_2000, 167:182) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_2000))
+
+# keep only cells inside rufa range
+#brick_2000_rufa <- crop(brick_2000, extent(rufa_range))
+brick_2000_rufa <- raster::mask(brick_2000, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_2000_rufa <- calc(brick_2000_rufa, fun = mean, na.rm = TRUE)
+
+#mean_2000_rufa <- crop(x = mean_2000_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_2000 <- getValues(mean_2000_rufa)
+mean_snowc_2000 <- mean(vals_2000, na.rm=TRUE)
+var_snowc_2000 <- var(vals_2000, na.rm = TRUE)
+
+# plot
+mean_2000_rufa_df <- as.data.frame(mean_2000_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 2000)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_2000_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 2001 ----####
+
+# load data in netCDF format
+
+nc_2001 <- nc_open("./data/snowc.2001.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_2001 <- brick("./data/snowc.2001.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_2001 <- subset(brick_2001, 166:181) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_2001))
+
+# keep only cells inside rufa range
+#brick_2001_rufa <- crop(brick_2001, extent(rufa_range))
+brick_2001_rufa <- raster::mask(brick_2001, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_2001_rufa <- calc(brick_2001_rufa, fun = mean, na.rm = TRUE)
+
+#mean_2001_rufa <- crop(x = mean_2001_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_2001 <- getValues(mean_2001_rufa)
+mean_snowc_2001 <- mean(vals_2001, na.rm=TRUE)
+var_snowc_2001 <- var(vals_2001, na.rm = TRUE)
+
+# plot
+mean_2001_rufa_df <- as.data.frame(mean_2001_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 2001)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_2001_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 2002 ----####
+
+# load data in netCDF format
+
+nc_2002 <- nc_open("./data/snowc.2002.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_2002 <- brick("./data/snowc.2002.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_2002 <- subset(brick_2002, 166:181) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_2002))
+
+# keep only cells inside rufa range
+#brick_2002_rufa <- crop(brick_2002, extent(rufa_range))
+brick_2002_rufa <- raster::mask(brick_2002, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_2002_rufa <- calc(brick_2002_rufa, fun = mean, na.rm = TRUE)
+
+#mean_2002_rufa <- crop(x = mean_2002_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_2002 <- getValues(mean_2002_rufa)
+mean_snowc_2002 <- mean(vals_2002, na.rm=TRUE)
+var_snowc_2002 <- var(vals_2002, na.rm = TRUE)
+
+# plot
+mean_2002_rufa_df <- as.data.frame(mean_2002_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 2002)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_2002_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 2003 ----####
+
+# load data in netCDF format
+
+nc_2003 <- nc_open("./data/snowc.2003.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_2003 <- brick("./data/snowc.2003.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_2003 <- subset(brick_2003, 166:181) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_2003))
+
+# keep only cells inside rufa range
+#brick_2003_rufa <- crop(brick_2003, extent(rufa_range))
+brick_2003_rufa <- raster::mask(brick_2003, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_2003_rufa <- calc(brick_2003_rufa, fun = mean, na.rm = TRUE)
+
+#mean_2003_rufa <- crop(x = mean_2003_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_2003 <- getValues(mean_2003_rufa)
+mean_snowc_2003 <- mean(vals_2003, na.rm=TRUE)
+var_snowc_2003 <- var(vals_2003, na.rm = TRUE)
+
+# plot
+mean_2003_rufa_df <- as.data.frame(mean_2003_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 2003)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_2003_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 2004 ----####
+
+# load data in netCDF format
+
+nc_2004 <- nc_open("./data/snowc.2004.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_2004 <- brick("./data/snowc.2004.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_2004 <- subset(brick_2004, 167:182) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_2004))
+
+# keep only cells inside rufa range
+#brick_2004_rufa <- crop(brick_2004, extent(rufa_range))
+brick_2004_rufa <- raster::mask(brick_2004, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_2004_rufa <- calc(brick_2004_rufa, fun = mean, na.rm = TRUE)
+
+#mean_2004_rufa <- crop(x = mean_2004_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_2004 <- getValues(mean_2004_rufa)
+mean_snowc_2004 <- mean(vals_2004, na.rm=TRUE)
+var_snowc_2004 <- var(vals_2004, na.rm = TRUE)
+
+# plot
+mean_2004_rufa_df <- as.data.frame(mean_2004_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 2004)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_2004_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 2005 ----####
+
+# load data in netCDF format
+
+nc_2005 <- nc_open("./data/snowc.2005.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_2005 <- brick("./data/snowc.2005.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_2005 <- subset(brick_2005, 166:181) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_2005))
+
+# keep only cells inside rufa range
+#brick_2005_rufa <- crop(brick_2005, extent(rufa_range))
+brick_2005_rufa <- raster::mask(brick_2005, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_2005_rufa <- calc(brick_2005_rufa, fun = mean, na.rm = TRUE)
+
+#mean_2005_rufa <- crop(x = mean_2005_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_2005 <- getValues(mean_2005_rufa)
+mean_snowc_2005 <- mean(vals_2005, na.rm=TRUE)
+var_snowc_2005 <- var(vals_2005, na.rm = TRUE)
+
+# plot
+mean_2005_rufa_df <- as.data.frame(mean_2005_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 2005)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_2005_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 2006 ----####
+
+# load data in netCDF format
+
+nc_2006 <- nc_open("./data/snowc.2006.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_2006 <- brick("./data/snowc.2006.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_2006 <- subset(brick_2006, 166:181) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_2006))
+
+# keep only cells inside rufa range
+#brick_2006_rufa <- crop(brick_2006, extent(rufa_range))
+brick_2006_rufa <- raster::mask(brick_2006, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_2006_rufa <- calc(brick_2006_rufa, fun = mean, na.rm = TRUE)
+
+#mean_2006_rufa <- crop(x = mean_2006_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_2006 <- getValues(mean_2006_rufa)
+mean_snowc_2006 <- mean(vals_2006, na.rm=TRUE)
+var_snowc_2006 <- var(vals_2006, na.rm = TRUE)
+
+# plot
+mean_2006_rufa_df <- as.data.frame(mean_2006_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 2006)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_2006_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 2007 ----####
+
+# load data in netCDF format
+
+nc_2007 <- nc_open("./data/snowc.2007.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_2007 <- brick("./data/snowc.2007.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_2007 <- subset(brick_2007, 166:181) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_2007))
+
+# keep only cells inside rufa range
+#brick_2007_rufa <- crop(brick_2007, extent(rufa_range))
+brick_2007_rufa <- raster::mask(brick_2007, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_2007_rufa <- calc(brick_2007_rufa, fun = mean, na.rm = TRUE)
+
+#mean_2007_rufa <- crop(x = mean_2007_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_2007 <- getValues(mean_2007_rufa)
+mean_snowc_2007 <- mean(vals_2007, na.rm=TRUE)
+var_snowc_2007 <- var(vals_2007, na.rm = TRUE)
+
+# plot
+mean_2007_rufa_df <- as.data.frame(mean_2007_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 2007)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_2007_rufa_df, aes(x = x, y = y, fill = layer)) 
+
+####---- 2008 ----####
+
+# load data in netCDF format
+
+nc_2008 <- nc_open("./data/snowc.2008.nc")
+
+# convert to rasterbrick format (layered rasters - one per day)
+brick_2008 <- brick("./data/snowc.2008.nc", varname="snowc")
+
+# subset to key nest initiation period
+brick_2008 <- subset(brick_2008, 167:182) # june 15-30
+
+rufa_range <- shp %>% 
+  st_transform(st_crs(brick_2008))
+
+# keep only cells inside rufa range
+#brick_2008_rufa <- crop(brick_2008, extent(rufa_range))
+brick_2008_rufa <- raster::mask(brick_2008, rufa_range)
+
+# calculate mean value per cell for june 15-30
+mean_2008_rufa <- calc(brick_2008_rufa, fun = mean, na.rm = TRUE)
+
+#mean_2008_rufa <- crop(x = mean_2008_rufa, y = extent(rufa_range)) # crop to zoom in on breeding range
+
+# calculate overall mean
+vals_2008 <- getValues(mean_2008_rufa)
+mean_snowc_2008 <- mean(vals_2008, na.rm=TRUE)
+var_snowc_2008 <- var(vals_2008, na.rm = TRUE)
+
+# plot
+mean_2008_rufa_df <- as.data.frame(mean_2008_rufa, xy = TRUE) %>% 
+  filter(!is.na(layer)) %>% 
+  mutate(year = 2008)
+
+ggplot() +
+  geom_sf(data = rufa_range, fill = NA, colour = "black") +
+  geom_tile(data = mean_2008_rufa_df, aes(x = x, y = y, fill = layer)) 
+
 ####---- 2009 ----####
 
 # load data in netCDF format
@@ -376,21 +908,29 @@ ggplot() +
 
 # create dataframe of annual means
 
-Year <- c(2009:2019)
+Year <- c(1995:2019)
 
-mean_snowc <- c(mean_snowc_2009, mean_snowc_2010, mean_snowc_2011, mean_snowc_2012,
+mean_snowc <- c(mean_snowc_1995, mean_snowc_1996, mean_snowc_1997, mean_snowc_1998,
+                mean_snowc_1999, mean_snowc_2000, mean_snowc_2001, mean_snowc_2002,
+                mean_snowc_2003, mean_snowc_2004, mean_snowc_2005, mean_snowc_2006,
+                mean_snowc_2007, mean_snowc_2008,
+                mean_snowc_2009, mean_snowc_2010, mean_snowc_2011, mean_snowc_2012,
                 mean_snowc_2013, mean_snowc_2014, mean_snowc_2015, mean_snowc_2016,
                 mean_snowc_2017, mean_snowc_2018, mean_snowc_2019)
 
-var_snowc <- c(var_snowc_2009, var_snowc_2010, var_snowc_2011, var_snowc_2012,
+var_snowc <- c(var_snowc_1995, var_snowc_1996, var_snowc_1997, var_snowc_1998,
+               var_snowc_1999, var_snowc_2000, var_snowc_2001, var_snowc_2002,
+               var_snowc_2003, var_snowc_2004, var_snowc_2005, var_snowc_2006,
+               var_snowc_2007, var_snowc_2008,
+               var_snowc_2009, var_snowc_2010, var_snowc_2011, var_snowc_2012,
                var_snowc_2013, var_snowc_2014, var_snowc_2015, var_snowc_2016,
                var_snowc_2017, var_snowc_2018, var_snowc_2019)
 
 arctic_snow_cov <- as.data.frame(cbind(Year, mean_snowc, var_snowc))
 
 arctic_snow_cov <- arctic_snow_cov %>% 
-  filter(!Year == 2009) %>% 
-  mutate(Period = 1:10)
+  #filter(!Year == 2009) %>% 
+  mutate(Period = 1:25)
 
 # combine raster dataframes
 mean_rufa_df <- bind_rows(mean_2010_rufa_df, mean_2011_rufa_df, mean_2012_rufa_df,
@@ -2110,39 +2650,39 @@ dev.off()
 
 ######################### NORTH ATLANTIC OSCILLATION ###########################
 
-nao <- read_csv("./data/nao/north_atlantic_oscillation.csv")
+nao <- read_csv("./data/nao/north_atlantic_oscillation_long.csv")
 
 nao_cov <- nao %>% 
-  filter(!Year == 2009) %>% 
+  #filter(!Year == 2009) %>% 
   filter(Month %in% c(5, 6, 7)) %>% 
   group_by(Year) %>% 
   summarize(mean_nao = mean(NAO),
             var_nao = var(NAO)) %>% 
-  mutate(Period = 1:10)
+  mutate(Period = 1:25)
 
 ############################# ARCTIC OSCILLATION ###############################
 
-ao <- read_csv("./data/ao/arctic_oscillation.csv")
+ao <- read_csv("./data/ao/arctic_oscillation_long.csv")
 
 ao_cov <- ao %>% 
-  filter(!Year == 2009) %>% 
+  #filter(!Year == 2009) %>% 
   filter(Month %in% c(6, 7)) %>% 
   group_by(Year) %>% 
   summarize(mean_ao = mean(AO),
             var_ao = var(AO)) %>% 
-  mutate(Period = 1:10)
+  mutate(Period = 1:25)
 
 ############################ HORSESHOE CRAB EGGS ###############################
 
 hsc_egg <- read_csv("./data/hsc/dat_fit.csv")
 
 hsc_cov <- hsc_egg %>% 
-  filter(group %in% c(2010:2019)) %>% 
+  filter(group %in% c(2000:2019)) %>% 
   filter(x %in% c(130:151)) %>% 
   group_by(group) %>% 
   summarize(mean_hsc = mean(predicted),
             var_hsc = var(predicted)) %>% 
-  mutate(Period = 1:10) %>%
+  mutate(Period = 6:25) %>%
   rename(Year = group) %>% 
   ungroup()
 
@@ -2161,16 +2701,16 @@ hsc_lag_cov <- hsc_egg %>%
 
 # merge covariates
 
-surv_covs <- left_join(arctic_snow_cov, sst_cov, by = c("Year", "Period"))
-surv_covs <- left_join(surv_covs, sst_anom_cov, by = c("Year", "Period"))
-surv_covs <- left_join(surv_covs, nao_cov, by = c("Year", "Period"))
+#surv_covs <- left_join(arctic_snow_cov, sst_cov, by = c("Year", "Period"))
+#surv_covs <- left_join(surv_covs, sst_anom_cov, by = c("Year", "Period"))
+surv_covs <- left_join(arctic_snow_cov, nao_cov, by = c("Year", "Period"))
 surv_covs <- left_join(surv_covs, ao_cov, by = c("Year", "Period"))
 surv_covs <- left_join(surv_covs, hsc_cov, by = c("Year", "Period"))
-surv_covs <- surv_covs %>% 
-  dplyr::select(-Year) %>% 
-  left_join(., hsc_lag_cov %>% dplyr::select(-Year), by = "Period")
+#surv_covs <- surv_covs %>% 
+#  dplyr::select(-Year) %>% 
+#  left_join(., hsc_lag_cov %>% dplyr::select(-Year), by = "Period")
 
-saveRDS(surv_covs, file = "./processed-data/surv_covariates.rds")
+saveRDS(surv_covs, file = "./processed-data/surv_covariates_long.rds")
 
 # standardize covariates
 
@@ -2190,11 +2730,11 @@ saveRDS(surv_covs_std, file = "./processed-data/surv_covariates_std.rds")
 
 # plot covariates
 
-#windowsFonts(Times=windowsFont("TT Times New Roman"))
+windowsFonts(Times=windowsFont("TT Times New Roman"))
 
 # set custom theme for all plots
 theme_cust <- function() {
-  theme_classic() %+replace%
+  theme_classic(base_family = "Times") %+replace%
     theme(axis.title.x = element_text(size=12),
           axis.text.x  = element_text(size=10, colour = "black"),
           axis.title.y = element_text(size=12, angle = 90, margin = margin(t = 0, r = 5, b = 0, l = 0)),
@@ -2211,6 +2751,9 @@ theme_cust <- function() {
 
 # snow cover
 snow_plot <- ggplot(surv_covs, aes(x=as.factor(Year), y=mean_snowc*100, group=1)) +
+  geom_rect(data=NULL,aes(xmin=-Inf,xmax="2008",ymin=-Inf,ymax=Inf),
+            fill="grey90", alpha=0.5) +
+  stat_smooth(colour = "grey50") +
   geom_errorbar(data = surv_covs, aes(x=as.factor(Year), ymin=(mean_snowc*100)-(var_snowc*100),
                                       ymax=(mean_snowc*100)+(var_snowc*100)),
                 width=0, size=0.5, colour="black", linetype=1) +
@@ -2247,6 +2790,9 @@ sst_anom_plot <- ggplot(surv_covs, aes(x=as.factor(Year), y=mean_sst_anomaly, gr
 
 # nao
 nao_plot <- ggplot(surv_covs, aes(x=as.factor(Year), y=mean_nao, group=1)) +
+  geom_rect(data=NULL,aes(xmin=-Inf,xmax="2008",ymin=-Inf,ymax=Inf),
+            fill="grey90", alpha=0.5) +
+  stat_smooth(colour = "grey50") +
   geom_errorbar(data = surv_covs, aes(x=as.factor(Year), ymin=mean_nao-var_nao,
                                       ymax=mean_nao+var_nao),
                 width=0, size=0.5, colour="black", linetype=1) +
@@ -2259,6 +2805,9 @@ nao_plot <- ggplot(surv_covs, aes(x=as.factor(Year), y=mean_nao, group=1)) +
 
 # ao
 ao_plot <- ggplot(surv_covs, aes(x=as.factor(Year), y=mean_ao, group=1)) +
+  geom_rect(data=NULL,aes(xmin=-Inf,xmax="2008",ymin=-Inf,ymax=Inf),
+            fill="grey90", alpha=0.5) +
+  stat_smooth(colour = "grey50") +
   geom_errorbar(data = surv_covs, aes(x=as.factor(Year), ymin=mean_ao-var_ao,
                                       ymax=mean_ao+var_ao),
                 width=0, size=0.5, colour="black", linetype=1) +
@@ -2271,6 +2820,9 @@ ao_plot <- ggplot(surv_covs, aes(x=as.factor(Year), y=mean_ao, group=1)) +
 
 # hsc egg availability
 hsc_plot <- ggplot(surv_covs, aes(x=as.factor(Year), y=mean_hsc, group=1)) +
+  geom_rect(data=NULL,aes(xmin=-Inf,xmax="2008",ymin=-Inf,ymax=Inf),
+            fill="grey90", alpha=0.5) +
+  stat_smooth(colour = "grey50") +
   # geom_errorbar(data = surv_covs, aes(x=as.factor(Year), ymin=mean_hsc-var_hsc,
   #                                     ymax=mean_hsc+var_hsc),
   #               width=0, size=0.5, colour="black", linetype=1) +
@@ -2282,10 +2834,10 @@ hsc_plot <- ggplot(surv_covs, aes(x=as.factor(Year), y=mean_hsc, group=1)) +
         axis.title.x = element_blank())
 
 # plot all
-png(filename = paste0("figures/cov-plots-all.png"),
-    width=6, height=6, units="in", res=600)
+png(filename = paste0("figures/cov-plots-long.png"),
+    width=10, height=7, units="in", res=600)
 
-plot_grid(snow_plot, sst_plot, sst_anom_plot, nao_plot, ao_plot, hsc_plot, labels = "auto", ncol = 2)
+plot_grid(snow_plot, nao_plot, ao_plot, hsc_plot, labels = "auto", ncol = 2)
 
 dev.off()
 
@@ -2371,13 +2923,10 @@ saveRDS(scores_pca, "./processed-data/surv_pc_scores.rds")
 
 # plot just nao and ao
 
-library(patchwork)
-
 surv_covs <- readRDS("./processed-data/surv_covariates.rds")
 
 osc_covs <- surv_covs %>% 
-  mutate(Year = 2010:2019) %>% 
-  dplyr::select(Year, mean_nao, mean_ao) %>% 
+  select(Year, mean_nao, mean_ao) %>% 
   pivot_longer(!Year, names_to = "teleconnection", values_to = "Index")
 
 osc_plot <- ggplot(osc_covs, aes(x = as.factor(Year), y = Index, group = teleconnection,
@@ -2397,9 +2946,9 @@ osc_plot <- ggplot(osc_covs, aes(x = as.factor(Year), y = Index, group = telecon
         legend.position = c(0.2, 0.85))
 
 png(filename = paste0("figures/oscillation-plots.png"),
-    width=7, height=5, units="in", res=1200)
+    width=6, height=4, units="in", res=600)
 
-print(osc_plot + plot_annotation(title = 'Figure S3'))
+print(osc_plot)
 
 dev.off()
 

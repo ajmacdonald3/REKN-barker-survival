@@ -1,10 +1,16 @@
+################################################################################
 # Run Barker model on real REKN data with covariates
+#
+################################################################################
 
 library(tidyverse)
 library(lubridate)
-library(R2ucare)
+#library(R2ucare)
 library(R2jags)
 library(jagsUI)
+library(corrplot)
+
+################################################################################
 
 # Specify model in BUGS language
 sink("barker.jags")
@@ -37,7 +43,7 @@ model {
 # Priors and constraints
 for (i in 1:nind){
    for (t in first[i]:(n.occasions-1)){
-   logit(surv[i,t]) <- mu.s + iv[1]*beta[1]*hsc[t] + iv[2]*beta[2]*snow[t] + epsilon.s[t]
+   logit(surv[i,t]) <- mu.s + iv[1]*beta[1]*cov[t] + epsilon.s[t]
    
    logit(Fid[i,t]) <- mu.F + epsilon.F[t]
    
@@ -53,7 +59,7 @@ for (i in 1:nind){
 
 for (t in 1:(n.occasions-1)){
    epsilon.s[t] ~ dnorm(0, tau.s)T(-15, 15)
-   s[t] <- 1 / (1+exp(-mu.s-iv[1]*beta[1]*hsc[t]-iv[2]*beta[2]*snow[t]-epsilon.s[t]))
+   s[t] <- 1 / (1+exp(-mu.s-iv[1]*beta[1]*cov[t]-epsilon.s[t]))
      
    epsilon.F[t] ~ dnorm(0, tau.F)T(-15, 15)
    F[t] <- 1 / (1+exp(-mu.F-epsilon.F[t]))
@@ -93,7 +99,7 @@ sigma2.R <- pow(sigma.R, 2)      # temporal variance
 mean.Rp ~ dbeta(1, 1)            # prior for mean resighting outside given mortality
 mean.f <- 0                      # prior for mean recovery
 
-for (i in 1:2){
+for (i in 1){
   beta[i] ~ dnorm(0, 0.001)T(-10, 10) # Prior for slope parameter
   iv[i] ~ dbern(0.5) # Prior for indicator variable
 }
@@ -173,8 +179,18 @@ for (i in 1:nind){
 ",fill = TRUE)
 sink()
 
+################################################################################
 
-# load data
+# load standardized covariates
+surv_covs <- readRDS("./processed-data/surv_covariates_std.rds")
+covs_mat <- sapply(surv_covs[3:7], as.numeric)
+covariates <- c("sst", "sst-anom", "snow", "nao", "ao")
+
+# correlation matrix
+covs_cor <- cor(surv_covs[3:7])
+corrplot(covs_cor)
+
+# load encounter history data
 barker_enchist <- readRDS("processed-data/barker-enchist.rds")
 
 # convert BirdID to row names so a numeric matrix can be generated
@@ -195,77 +211,62 @@ r_barker_enchist <- barker_enchist  # recoded CH
 r_barker_enchist[r_barker_enchist==0] <- 4
 
 # initial values
-# z.init <- matrix(NA, nrow(r_barker_enchist), ncol(r_barker_enchist))
-# for (i in 1:nrow(r_barker_enchist)){
-#    z.init[i,first[i]] <- r_barker_enchist[i,first[i]]
-# }
-# 
-# z.init <- as.data.frame(t(z.init)) # transpose
-# z.init <- tidyr::fill(z.init, names(z.init)) # fill all subsequent unknown states with previous known state
-# z.init <- t(z.init) # transpose back
-# for (i in 1:nrow(r_barker_enchist)){
-#    z.init[i,first[i]] <- NA
-# }
-
-# z.init <- r_barker_enchist
-# for (i in 1:nrow(r_barker_enchist)){
-#    z.init[i,(1:(first[i]-1))] <- NA
-#    #z.init[i,((first[i]+1):ncol(r_barker_enchist))] <- NA
-# }
-# 
-# for (i in 1:nrow(r_barker_enchist)){
-#    z.init[i,(1:first[i])] <- NA
-# }
-# 
 z.init <- matrix(1, nrow(r_barker_enchist), ncol(r_barker_enchist))
 for (i in 1:nrow(r_barker_enchist)){
   z.init[i,(1:first[i])] <- NA
 }
-# 
-# ch <- r_barker_enchist
-# ch[ch==4] <- NA
-# z.known <- ch
-# z.known[z.known==2] <- 1
-# z.known[z.known==3] <- 3
-# for (i in 1:nrow(ch)){
-#   z.known[i,first[i]] <- NA
-# }
-# 
-# z.init[!is.na(ch)] <- NA
 
 inits <- function(){list(mean.s = runif(1, 0, 1), mean.F = runif(1, 0, 1), mean.p = runif(1, 0, 1),
                          mean.R = runif(1, 0, 1), mean.Rp = runif(1, 0, 1),
                          sigma.s = runif(1, 0, 5), sigma.F = runif(1, 0, 5), sigma.p = runif(1, 0, 5),
-                         sigma.R = runif(1, 0, 5), z = z.init)}
-
-# bundle data
-jags.data <- list(y = r_barker_enchist, first = first, n.occasions = dim(r_barker_enchist)[2],
-                  nind = dim(r_barker_enchist)[1])
+                         sigma.R = runif(1, 0, 5), 
+                         iv = rep(1, 1), beta = runif(1, -10, 10), z = z.init)}
 
 # parameters monitored
 parameters <- c("mean.s", "mean.F", "mean.p", "mean.R", "mean.Rp", "mean.f",
                 "sigma2.s", "sigma2.F", "sigma2.p", "sigma2.R",
-                "s", "F", "p", "R")
+                "s", "F", "p", "R", "beta", "iv")
 
 # MCMC settings
-ni <- 50000
+ni <- 25000
 nt <- 5
-nb <- 25000
+nb <- 15000
 nc <- 3
 
-# run model
-barker.mod <- jagsUI::jags(jags.data, inits, parameters, "barker.jags", n.chains = nc, n.thin = nt,
-                           n.iter = ni, n.burnin = nb, parallel = TRUE)
+# run model for each climate variable
+#for (k in covariates){
 
-print(barker.mod, digits = 3)
+  for (z in 1:ncol(covs_mat)){
 
-saveRDS(barker.mod$summary, file = paste0("./analysis-output/barker-run1-summary", Sys.Date(), ".rds"))
-write.csv(barker.mod$summary, file = paste0("./analysis-output/barker-run1-summary", Sys.Date(), ".csv"))
+    # bundle data
+    jags.data <- list(y = r_barker_enchist, first = first, n.occasions = dim(r_barker_enchist)[2],
+                      nind = dim(r_barker_enchist)[1], cov = covs_mat[,z])
 
-saveRDS(barker.mod$sims.list, file = paste0("./analysis-output/barker-run1-simslist", Sys.Date(), ".rds"))
+    # run model
+    barker.mod <- jagsUI::jags(jags.data, inits, parameters, "barker.jags", n.chains = nc, n.thin = nt,
+                               n.iter = ni, n.burnin = nb, parallel = TRUE)
+
+    # save results
+    save(barker.mod,
+         file = paste0("./analysis-output/covariate-models/", covariates[z], "/model_", covariates[z], ".RData"))
+
+  }
+
+#}
+
+################################################################################
+
+#for (z in 1:5){
+
+for (k in covariates){
+  
+load(paste0("./analysis-output/covariate-models/", k, "/model_", k, ".RData"))  
+  
+saveRDS(barker.mod$summary, file = paste0("./analysis-output/covariate-models/", k, "/summary.rds"))
+saveRDS(barker.mod$sims.list, file = paste0("./analysis-output/covariate-models/", k, "/simslist.rds"))
 
 # traceplots
-pdf(file = paste0("./analysis-output/traceplots/barker-run1-traceplots", Sys.Date(), ".pdf"))
+pdf(file = paste0("./analysis-output/covariate-models/", k, "/traceplots/traceplots.pdf"))
 par(mfrow = c(3, 1))
 traceplot(barker.mod)
 dev.off()
@@ -278,7 +279,7 @@ theme_set(theme_bw())
 
 for (i in colnames(sims.list)){
   
-  png(filename = paste0("analysis-output/parameter-identifiability/",
+  png(filename = paste0("analysis-output/covariate-models/", k, "/parameter-identifiability/",
                         i,"-","check.png"),
       width=4, height=3, units="in", res=600)
   
@@ -291,10 +292,7 @@ for (i in colnames(sims.list)){
   
 }
 
-################################################################################
-
 # plot results
-
 windowsFonts(Times=windowsFont("TT Times New Roman"))
 
 # set custom theme for all plots
@@ -315,10 +313,9 @@ theme_cust <- function() {
 }
 
 # format data
-barker_res <- readRDS("./analysis-output/barker-run1-summary2022-01-19.rds")
+barker_res <- as.data.frame(barker.mod$summary)
 
 barker_res <- barker_res %>% 
-  as.data.frame %>% 
   rownames_to_column() %>% 
   dplyr::rename(parameter = rowname) %>% 
   dplyr::rename(lcl = `2.5%`) %>% 
@@ -365,7 +362,7 @@ s_plot <- ggplot() +
   theme_cust() +
   theme(axis.title.x = element_blank())
 
-png(filename = "figures/s-plot.png",
+png(filename = paste0("analysis-output/covariate-models/", k, "/figures/s-plot.png"),
     width=6, height=4, units="in", res=600)
 
 plot(s_plot)
@@ -391,7 +388,7 @@ fid_plot <- ggplot() +
   theme_cust() +
   theme(axis.title.x = element_blank())
 
-png(filename = "figures/fid-plot.png",
+png(filename = paste0("analysis-output/covariate-models/", k, "/figures/fid-plot.png"),
     width=6, height=4, units="in", res=600)
 
 plot(fid_plot)
@@ -417,7 +414,7 @@ p_plot <- ggplot() +
   theme_cust() +
   theme(axis.title.x = element_blank())
 
-png(filename = "figures/p-plot.png",
+png(filename = paste0("analysis-output/covariate-models/", k, "/figures/p-plot.png"),
     width=6, height=4, units="in", res=600)
 
 plot(p_plot)
@@ -443,9 +440,13 @@ osr_plot <- ggplot() +
   theme_cust() +
   theme(axis.title.x = element_blank())
 
-png(filename = "figures/osr-plot.png",
+png(filename = paste0("analysis-output/covariate-models/", k, "/figures/osr-plot.png"),
     width=6, height=4, units="in", res=600)
 
 plot(osr_plot)
 
 dev.off()
+
+  }
+  
+#}

@@ -309,6 +309,12 @@ theme_cust <- function() {
 # format data
 barker_res <- barker.mod$summary
 
+barker_res_df <- barker_res %>%
+  as.data.frame() %>% 
+  tibble::rownames_to_column()
+  
+writexl::write_xlsx(barker_res_df, "./analysis-output/covariate-models/pca/model_2_summary.xlsx")
+
 barker_res <- barker_res %>% 
   as.data.frame %>% 
   rownames_to_column() %>% 
